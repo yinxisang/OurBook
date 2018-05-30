@@ -54,21 +54,38 @@ export default {
       }
 
       const { pages, themeConfig } = this.$site
+      // 最大显示建议数
       const max = themeConfig.searchMaxSuggestions || 5
+      // 权值数组
+      const priorityList = []
       const localePath = this.$localePath
-      const qlist = query.split(' ').filter(v => v)
+      // const qlist = query.split(' ').filter(v => v)
+      const qlist = query.replace(' ', '').split('')
       // custom search logic
       const matches = (item) => {
         if(!item) {
           return false
         }
-        return qlist.every((v) => {
-          return item.indexOf(v) > -1
+        // return qlist.every((v) => {
+        //   return item.indexOf(v) > -1
+        // })
+        let order = 0
+        qlist.forEach(key => {
+          if (item.indexOf(key) != -1) {
+            order++
+          }
         })
+        if (order >= qlist.length) {
+          priorityList.push(Math.round((order / item.length) * 100))
+          return true
+        } else {
+          return false
+        }
       };
       const res = []
       for (let i = 0; i < pages.length; i++) {
-        // if (res.length >= max) break
+        // 超过搜索限制停止
+        if (res.length >= max) break
         const p = pages[i]
         // filter out results that do not match current locale
         if (this.getPageLocalePath(p) !== localePath) {
@@ -104,15 +121,25 @@ export default {
               }
             });
             res.push(np)
-          } else {
-            // 非文章详情页一级标题靠前
-            res.unshift(p)
-          }        
+            } else {
+              // 非文章详情页一级标题靠前
+              res.unshift(p)
+            }        
           }
         }
       }
       // 全部遍历可能有性能问题，暂时未发现
-      return res.slice(0, max)
+      // 选择排序后输出的数组
+      const priorityRes = []
+      console.log(res)
+      while (priorityList.length > 0) {
+        const max = Math.max(...priorityList)
+        const index = priorityList.findIndex(val => val === max)
+        priorityRes.push(res[index])
+        priorityList.splice(index, 1)
+      }
+      // return res.slice(0, max)
+      return priorityRes
     },
     // make suggestions align right when there are not enough items
     alignRight () {

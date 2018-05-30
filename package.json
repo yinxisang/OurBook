@@ -27,7 +27,8 @@
     "url": "https://github.com/weNKers/OurBook/issues"
   },
   "homepage": "https://github.com/weNKers/OurBook#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "vuepress": "^0.10.0"
   }
 }
