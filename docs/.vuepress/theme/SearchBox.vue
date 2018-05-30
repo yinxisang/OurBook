@@ -20,8 +20,9 @@
         @mousedown="goDetail(i)"
         @mouseenter="focus(i)">
         <a :href="s.path" @click.prevent>
+          <span v-if="s.univ">{{s.univ}} &gt;&nbsp;</span>
           <span class="page-title">{{ s.title || s.path }}</span>
-          <span v-if="s.header" class="header">&gt; {{ s.header.title }}</span>
+          <span v-if="s.header  && s.header.title " class="header">&gt; {{ s.header.title }}</span>
         </a>
       </li>
     </ul>
@@ -102,7 +103,8 @@ export default {
             if(matches(`${name} ${t} ${h.title}`)) {
               const np = Object.assign({}, p, {
                 path: p.path + '#' + h.slug,
-                header: h
+                header: h,
+                univ: name
               });
               // 二级目录检索靠前
               if(h.level === 2) {
