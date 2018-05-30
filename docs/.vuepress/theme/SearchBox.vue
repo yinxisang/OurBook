@@ -17,7 +17,7 @@
       @mouseleave="unfocus">
       <li class="suggestion" v-for="(s, i) in suggestions"
         :class="{ focused: i === focusIndex }"
-        @mousedown="go(i)"
+        @mousedown="goDetail(i)"
         @mouseenter="focus(i)">
         <a :href="s.path" @click.prevent>
           <span class="page-title">{{ s.title || s.path }}</span>
@@ -95,8 +95,10 @@ export default {
         const un = /\/(.*)\//g.exec(p.path)
         const name = un ? univ[un[1]] : ''
         if(p.headers) {
+          console.log(p.headers)
           p.headers.forEach((h) => {
             const t = p.title
+            console.log(matches(`${name} ${t} ${h.title}`), `${name} ${t} ${h.title}`)
             if(matches(`${name} ${t} ${h.title}`)) {
               const np = Object.assign({}, p, {
                 path: p.path + '#' + h.slug,
@@ -175,7 +177,8 @@ export default {
         }
       }
     },
-    go (i) {
+    // 不能使用保留字 go
+    goDetail (i) {
       if(!this.showSuggestions) {
         return;
       }
