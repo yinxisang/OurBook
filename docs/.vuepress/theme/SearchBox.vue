@@ -83,7 +83,7 @@ export default {
           return false
         }
       };
-      const res = []
+      let res = []
       for (let i = 0; i < pages.length; i++) {
         // 超过搜索限制停止
         // if (res.length >= max) break
@@ -106,10 +106,13 @@ export default {
                 header: h,
                 univ: name
               });
-              // 二级目录检索靠前
-              if(h.level === 2) {
-                res.unshift(np)
-              } else {
+              // // 二级目录检索靠前
+              // if(h.level === 2) {
+              //   res.unshift(np)
+              // } else {
+              //   res.push(np)
+              // }
+              if (res.every(item => item.key !== np.key)) {
                 res.push(np)
               }
             }
@@ -118,16 +121,20 @@ export default {
           const t = p.title
           if(matches(`${t} ${name}`)) {
             if(name) {
-            const np = Object.assign({}, p, {
-              title: name,
-              header: {
-                title: t
+              const np = Object.assign({}, p, {
+                title: name,
+                header: {
+                  title: t
+                }
+              });
+              if (res.every(item => item.key !== np.key)) {
+                res.push(np)
               }
-            });
-            res.push(np)
             } else {
               // 非文章详情页一级标题靠前
-              res.unshift(p)
+              if (res.every(item => item.key !== p.key)) {
+                res.push(p)
+              }
             }        
           }
         }
@@ -136,13 +143,19 @@ export default {
       // 选择排序后输出的数组
       const priorityRes = []
       console.log('匹配的资源', res)
+      console.log('优先级', priorityList)
       while (priorityList.length > 0) {
         const max = Math.max(...priorityList)
         const index = priorityList.findIndex(val => val === max)
-        priorityRes.push(res[index])
+        if (res[index]) {
+          priorityRes.push(res[index])
+          
+        }
         priorityList.splice(index, 1)
+        
       }
-      return priorityRes.slice(0, max)
+      console.log('优先级匹配', priorityRes.slice(0, max))
+      return res.slice(0, max)
       // return priorityRes
     },
     // make suggestions align right when there are not enough items
