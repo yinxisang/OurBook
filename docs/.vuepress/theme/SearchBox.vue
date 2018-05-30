@@ -86,7 +86,7 @@ export default {
       const res = []
       for (let i = 0; i < pages.length; i++) {
         // 超过搜索限制停止
-        if (res.length >= max) break
+        // if (res.length >= max) break
         const p = pages[i]
         // filter out results that do not match current locale
         if (this.getPageLocalePath(p) !== localePath) {
@@ -96,10 +96,10 @@ export default {
         const un = /\/(.*)\//g.exec(p.path)
         const name = un ? univ[un[1]] : ''
         if(p.headers) {
-          console.log(p.headers)
+          // console.log('p.headers', p,p.headers)
           p.headers.forEach((h) => {
             const t = p.title
-            console.log(matches(`${name} ${t} ${h.title}`), `${name} ${t} ${h.title}`)
+            // console.log(matches(`${name} ${t} ${h.title}`), `${name} ${t} ${h.title}`)
             if(matches(`${name} ${t} ${h.title}`)) {
               const np = Object.assign({}, p, {
                 path: p.path + '#' + h.slug,
@@ -135,15 +135,15 @@ export default {
       // 全部遍历可能有性能问题，暂时未发现
       // 选择排序后输出的数组
       const priorityRes = []
-      console.log(res)
+      console.log('匹配的资源', res)
       while (priorityList.length > 0) {
         const max = Math.max(...priorityList)
         const index = priorityList.findIndex(val => val === max)
         priorityRes.push(res[index])
         priorityList.splice(index, 1)
       }
-      // return res.slice(0, max)
-      return priorityRes
+      return priorityRes.slice(0, max)
+      // return priorityRes
     },
     // make suggestions align right when there are not enough items
     alignRight () {
