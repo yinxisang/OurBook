@@ -96,25 +96,33 @@ export default {
         let order = 0
         let total = 0
         let count = 0
+        // 匹配完整
+        let defaultStr = `${item.name}${item.pTitle}${(item.h && item.h.title) ? item.h.title : ''}`
+        let aim = qlist.every(key => defaultStr.indexOf(key) !== -1)
+        if (!aim) {
+          return
+        }
+
+
         // 如果在大学名称中 权重为9
         if (item.name) {
           order = search(item.name)
           total += order
-          count += order * 9
+          count += order * 5
         }
         
         // 如果在主页面标题中 权重为5
         if (item.pTitle) {
           order = search(item.pTitle)
           total += order
-          count += order * 5
+          count += order * 3
         }
 
         // 如果在主页面副标题中 权重为3
         if (item.h && item.h.title) {
           order = search(item.h.title)
           total += order
-          count += order * 3
+          count += order * 1
         }
 
         let np = Object.create(null)
