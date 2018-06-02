@@ -57,33 +57,90 @@ export default {
       const { pages, themeConfig } = this.$site
       // 最大显示建议数
       const max = themeConfig.searchMaxSuggestions || 5
-      // 权值数组
-      const priorityList = []
+      // 筛选数组
+      let res = []
+
       const localePath = this.$localePath
-      // const qlist = query.split(' ').filter(v => v)
+      // input框中待输入的关键词处理
       const qlist = query.replace(' ', '').split('')
       // custom search logic
-      const matches = (item) => {
-        if(!item) {
-          return false
-        }
-        // return qlist.every((v) => {
-        //   return item.indexOf(v) > -1
-        // })
+
+      // const matches = (item) => {
+      //   if(!item) {
+      //     return false
+      //   }
+      //   // return qlist.every((v) => {
+      //   //   return item.indexOf(v) > -1
+      //   // })
+      //   let order = 0
+      //   qlist.forEach(key => {
+      //     if (item.indexOf(key) != -1) {
+      //       order++
+      //     }
+      //   })
+      //   if (order >= qlist.length) {
+      //     priorityList.push(Math.round((order / item.length) * 100))
+      //     return true
+      //   } else {
+      //     return false
+      //   }
+      // }
+
+      // 检索
+      const search = (str) => {
+        const match = qlist.filter(key => str.indexOf(key) !== -1)
+        return match.length
+      }
+      // 加权
+      const newMatch = (item, p) => {
         let order = 0
-        qlist.forEach(key => {
-          if (item.indexOf(key) != -1) {
-            order++
-          }
-        })
-        if (order >= qlist.length) {
-          priorityList.push(Math.round((order / item.length) * 100))
-          return true
-        } else {
-          return false
+        let total = 0
+        let count = 0
+        // 如果在大学名称中 权重为9
+        if (item.name) {
+          order = search(item.name)
+          total += order
+          count += order * 9
         }
-      };
-      let res = []
+        
+        // 如果在主页面标题中 权重为5
+        if (item.pTitle) {
+          order = search(item.pTitle)
+          total += order
+          count += order * 5
+        }
+
+        // 如果在主页面副标题中 权重为3
+        if (item.h && item.h.title) {
+          order = search(item.h.title)
+          total += order
+          count += order * 3
+        }
+
+        let np = Object.create(null)
+        if (total >= qlist.length) {
+          if (item.h) {
+            np = Object.assign({}, p, {
+              path: `${p.path}#${item.h.slug}`,
+              header: item.h,
+              univ: name ? name : '',
+              count
+            })
+          } else {
+            if (item.name) {
+              np = Object.assign({}, p, {
+                title: item.name,
+                header: {
+                  title: p.title
+                },
+                count
+              });
+            }
+          }
+          res.push(np)
+        }
+      }
+
       for (let i = 0; i < pages.length; i++) {
         // 超过搜索限制停止
         // if (res.length >= max) break
@@ -96,67 +153,28 @@ export default {
         const un = /\/(.*)\//g.exec(p.path)
         const name = un ? univ[un[1]] : ''
         if(p.headers) {
-          // console.log('p.headers', p,p.headers)
+
           p.headers.forEach((h) => {
             const t = p.title
-            // console.log(matches(`${name} ${t} ${h.title}`), `${name} ${t} ${h.title}`)
-            if(matches(`${name} ${t} ${h.title}`)) {
-              const np = Object.assign({}, p, {
-                path: p.path + '#' + h.slug,
-                header: h,
-                univ: name
-              });
-              // // 二级目录检索靠前
-              // if(h.level === 2) {
-              //   res.unshift(np)
-              // } else {
-              //   res.push(np)
-              // }
-              if (res.every(item => item.key !== np.key)) {
-                res.push(np)
-              }
-            }
+
+            newMatch({name, pTitle: p.title, h}, p)
+
           });
         } else {
-          const t = p.title
-          if(matches(`${t} ${name}`)) {
-            if(name) {
-              const np = Object.assign({}, p, {
-                title: name,
-                header: {
-                  title: t
-                }
-              });
-              if (res.every(item => item.key !== np.key)) {
-                res.push(np)
-              }
-            } else {
-              // 非文章详情页一级标题靠前
-              if (res.every(item => item.key !== p.key)) {
-                res.push(p)
-              }
-            }        
-          }
+
+          newMatch({name, pTitle: p.title}, p)
+
         }
       }
-      // 全部遍历可能有性能问题，暂时未发现
-      // 选择排序后输出的数组
-      const priorityRes = []
-      console.log('匹配的资源', res)
-      console.log('优先级', priorityList)
-      while (priorityList.length > 0) {
-        const max = Math.max(...priorityList)
-        const index = priorityList.findIndex(val => val === max)
-        if (res[index]) {
-          priorityRes.push(res[index])
-          
-        }
-        priorityList.splice(index, 1)
-        
-      }
-      console.log('优先级匹配', priorityRes.slice(0, max))
+      
+
+      res = res.sort((a, b) => {
+        return b.count - a.count
+      })
+
+      console.log(res.slice(0, max))
+
       return res.slice(0, max)
-      // return priorityRes
     },
     // make suggestions align right when there are not enough items
     alignRight () {
